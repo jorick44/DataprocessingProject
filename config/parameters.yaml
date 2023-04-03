@@ -1,0 +1,16 @@
+# Base parameters
+
+# Path data dir
+data_dir: "/students/2022-2023/Thema11/DataprocessingJBaron/"
+
+# Adapter seq for cutadapt
+cutadpt: "AGATCGGAA"
+
+# Path to the fastq file relative to data_dir
+fastq_file: "FASTQ/SRR2073061.fastq.gz"
+
+# Path to the refgen.fa file relative to data_dir
+refgen: "refgen/refgen.fa"
+
+# Path to gff file relative to data_dir
+gff: "gff/Glycinemax.gff3"

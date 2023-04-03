@@ -1,0 +1,108 @@
+configfile: "config/parameters.yaml"
+
+
+FASTQ = config["fastq_file"]
+ADPT = config["cutadpt"]
+REFGEN = config["refgen"]
+DATA_DIR = config["data_dir"]
+
+rule all:
+    input:
+        "results/result.pdf"
+
+
+rule cutadpt:
+    input:
+        DATA_DIR + FASTQ
+    output:
+        DATA_DIR + "cut/processed.fastq"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "cutadapt -a {ADPT} {input} -o {output}"
+
+
+rule refgen_bwa:
+    input:
+        base = DATA_DIR + REFGEN,
+        notused= DATA_DIR + "cut/processed.fastq"
+    output:
+        DATA_DIR + REFGEN + ".ann"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "bwa index -a bwtsw {input.base}"
+
+
+rule refgen_sam:
+    input:
+        base = DATA_DIR + REFGEN,
+        notused = DATA_DIR + REFGEN + ".ann"
+    output:
+        DATA_DIR + REFGEN + ".fai"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "samtools faidx {input.base}"
+
+
+rule mapping:
+    input:
+        refgen = DATA_DIR + REFGEN,
+        sample = DATA_DIR + "cut/processed.fastq",
+        notused = DATA_DIR + REFGEN + ".fai"
+    output:
+        DATA_DIR + "mapped_reads/data.bam"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "bwa mem {input.refgen} {input.sample} | samtools view -Sb - > {output}"
+
+
+rule sorting:
+    input:
+        DATA_DIR + "mapped_reads/data.bam"
+    output:
+        DATA_DIR + "sorted_reads/data.bam"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "samtools sort -O bam {input} > {output} "
+
+
+rule index:
+    input:
+        DATA_DIR + "sorted_reads/data.bam"
+    output:
+        DATA_DIR + "sorted_reads/data.bam.bai"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "samtools index {input}"
+
+
+rule variants:
+    input:
+        fa = DATA_DIR + REFGEN,
+        bam = DATA_DIR + "sorted_reads/data.bam",
+        bai = DATA_DIR + "sorted_reads/data.bam.bai"
+    output:
+        DATA_DIR + "calls/all.vcf"
+    conda:
+        "envs/env.yaml"
+    shell:
+        "samtools mpileup -g -f {input.fa} {input.bam} | "
+        "bcftools call -mv - > {output}"
+
+
+rule visualize:
+    input:
+        vcf = DATA_DIR + "calls/all.vcf",
+        dna = DATA_DIR + REFGEN,
+        gff = DATA_DIR + config["gff"]
+    output:
+        out = "results/result.pdf"
+    conda:
+        "envs/env.yaml"
+    script:
+        "scripts/visualize.R"
