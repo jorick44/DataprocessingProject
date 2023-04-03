@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # snakemake
-.snakemake
+.snakemake/
 
 # idea
-.idea
+.idea/

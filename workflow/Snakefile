@@ -19,7 +19,7 @@ rule cutadpt:
     conda:
         "envs/env.yaml"
     shell:
-        "cutadapt -a {ADPT} {input} -o {output}"
+        "cutadapt -a {ADPT} {input} -o {output} --cores=0"
 
 
 rule refgen_bwa:
@@ -37,7 +37,6 @@ rule refgen_bwa:
 rule refgen_sam:
     input:
         base = DATA_DIR + REFGEN,
-        notused = DATA_DIR + REFGEN + ".ann"
     output:
         DATA_DIR + REFGEN + ".fai"
     conda:
@@ -50,13 +49,15 @@ rule mapping:
     input:
         refgen = DATA_DIR + REFGEN,
         sample = DATA_DIR + "cut/processed.fastq",
-        notused = DATA_DIR + REFGEN + ".fai"
+        notused = DATA_DIR + REFGEN + ".fai",
+        notused2 = DATA_DIR + REFGEN + ".ann"
     output:
         DATA_DIR + "mapped_reads/data.bam"
+    threads: 8
     conda:
         "envs/env.yaml"
     shell:
-        "bwa mem {input.refgen} {input.sample} | samtools view -Sb - > {output}"
+        "bwa mem -t{threads} {input.refgen} {input.sample} | samtools view -@{threads} -Sb - > {output}"
 
 
 rule sorting:
@@ -64,10 +65,11 @@ rule sorting:
         DATA_DIR + "mapped_reads/data.bam"
     output:
         DATA_DIR + "sorted_reads/data.bam"
+    threads: 8
     conda:
         "envs/env.yaml"
     shell:
-        "samtools sort -O bam {input} > {output} "
+        "samtools sort -@{threads} -O bam {input} > {output}"
 
 
 rule index:
@@ -75,10 +77,11 @@ rule index:
         DATA_DIR + "sorted_reads/data.bam"
     output:
         DATA_DIR + "sorted_reads/data.bam.bai"
+    threads: 8
     conda:
         "envs/env.yaml"
     shell:
-        "samtools index {input}"
+        "samtools index {input} -@{threads}"
 
 
 rule variants:
@@ -88,11 +91,12 @@ rule variants:
         bai = DATA_DIR + "sorted_reads/data.bam.bai"
     output:
         DATA_DIR + "calls/all.vcf"
+    threads: 8
     conda:
         "envs/env.yaml"
     shell:
-        "samtools mpileup -g -f {input.fa} {input.bam} | "
-        "bcftools call -mv - > {output}"
+        "bcftools mpileup -f {input.fa} {input.bam} --threads {threads} | "
+        "bcftools call -mv --threads {threads} - > {output}"
 
 
 rule visualize:
