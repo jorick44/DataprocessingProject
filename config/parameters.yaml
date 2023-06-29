@@ -1,7 +1,7 @@
 # Base parameters
 
 # Path data dir
-data_dir: "/students/2022-2023/Thema11/DataprocessingJBaron/"
+data_dir: "C:/Users/joric/DataprocessingData/"
 
 # Adapter seq for cutadapt
 cutadpt: "AGATCGGAA"
@@ -14,3 +14,6 @@ refgen: "refgen/refgen.fa"
 
 # Path to gff file relative to data_dir
 gff: "gff/Glycinemax.gff3"
+
+# Maximum amount of threads snakemake can use
+threads: 8
