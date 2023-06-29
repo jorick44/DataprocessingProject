@@ -6,13 +6,13 @@ This pipeline was developed using Snakemake, a workflow management system that h
 ## Requirements
 To run this pipeline, you'll need to have the following software installed:
 
-- Snakemake
-- R
-- Conda **or the following tools**
-- Samtools
-- cutadpt
-- bwa
-- bcftools
+- Snakemake 7.30.1
+- R 4.3
+- Conda 23.5.0 **or the following tools**
+- Samtools 1.17
+- cutadpt 4.4
+- bwa 0.7.17
+- bcftools 1.17
 
 # Usage
 
