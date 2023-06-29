@@ -5,6 +5,7 @@ FASTQ = config["fastq_file"]
 ADPT = config["cutadpt"]
 REFGEN = config["refgen"]
 DATA_DIR = config["data_dir"]
+THREADS = config["threads"]
 
 rule all:
     input:
@@ -16,10 +17,11 @@ rule cutadpt:
         DATA_DIR + FASTQ
     output:
         DATA_DIR + "cut/processed.fastq"
+    threads: THREADS
     conda:
         "envs/env.yaml"
     shell:
-        "cutadapt -a {ADPT} {input} -o {output} --cores=0"
+        "cutadapt -a {ADPT} {input} -o {output} --cores={threads}"
 
 
 rule refgen_bwa:
@@ -53,7 +55,7 @@ rule mapping:
         notused2 = DATA_DIR + REFGEN + ".ann"
     output:
         DATA_DIR + "mapped_reads/data.bam"
-    threads: 8
+    threads: THREADS
     conda:
         "envs/env.yaml"
     shell:
@@ -65,7 +67,7 @@ rule sorting:
         DATA_DIR + "mapped_reads/data.bam"
     output:
         DATA_DIR + "sorted_reads/data.bam"
-    threads: 8
+    threads: THREADS
     conda:
         "envs/env.yaml"
     shell:
@@ -77,7 +79,7 @@ rule index:
         DATA_DIR + "sorted_reads/data.bam"
     output:
         DATA_DIR + "sorted_reads/data.bam.bai"
-    threads: 8
+    threads: THREADS
     conda:
         "envs/env.yaml"
     shell:
@@ -91,7 +93,7 @@ rule variants:
         bai = DATA_DIR + "sorted_reads/data.bam.bai"
     output:
         DATA_DIR + "calls/all.vcf"
-    threads: 8
+    threads: THREADS
     conda:
         "envs/env.yaml"
     shell:
